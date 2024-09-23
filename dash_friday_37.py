@@ -87,8 +87,9 @@ def mapMain(year=2021):
     fig.layout.coloraxis.colorbar.len = 0.9
     fig.layout.coloraxis.colorbar.bgcolor = "rgba(255,255,255,0.85)"
     fig.layout.coloraxis.colorbar.thickness = 5
-    fig.layout.coloraxis.colorbar.x = 0.95
-    fig.layout.coloraxis.colorbar.y = 0.5
+    fig.layout.coloraxis.colorbar.x=0.5
+    fig.layout.coloraxis.colorbar.y=0
+    fig.layout.coloraxis.colorbar.orientation='h'
     fig.update_traces(hovertemplate="<b>%{customdata[0]}</b><br>%{customdata[1]} %")
     return fig
 
