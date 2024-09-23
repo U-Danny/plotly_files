@@ -39,8 +39,9 @@ def mapMain():
     fig.layout.coloraxis.colorbar.len=0.9
     fig.layout.coloraxis.colorbar.bgcolor='rgba(255,255,255,0.5)'
     fig.layout.coloraxis.colorbar.thickness=5
-    fig.layout.coloraxis.colorbar.x=0.01
-    fig.layout.coloraxis.colorbar.y=0.45
+    fig.layout.coloraxis.colorbar.x=0.5
+    fig.layout.coloraxis.colorbar.y=0
+    fig.layout.coloraxis.colorbar.orientation='h'
     return fig
 
 config_pm25 = {
