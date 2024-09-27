@@ -39,10 +39,6 @@ config = {
     },
 }
 
-
-df_employer = pd.read_csv(
-    "https://raw.githubusercontent.com/U-Danny/test-dataset/refs/heads/main/employers_years.csv"
-)
 with urlopen(
     "https://raw.githubusercontent.com/U-Danny/test-dataset/refs/heads/main/countries.geo.json"
 ) as response:
@@ -50,26 +46,31 @@ with urlopen(
 df_nationality = pd.read_csv(
     "https://raw.githubusercontent.com/U-Danny/test-dataset/refs/heads/main/beneficiary_origin.csv"
 )
+df_status_type = pd.read_csv('https://raw.githubusercontent.com/U-Danny/test-dataset/refs/heads/main/status_type_years.csv')
+df_gender = pd.read_csv('https://raw.githubusercontent.com/U-Danny/test-dataset/refs/heads/main/gender_years.csv')
 
-
-def graphEmployer():
-    fig = px.scatter(
-        df_employer,
-        x="employer_name",
-        y="value",
-        animation_frame="lottery_year",
-        animation_group="employer_name",
-        size="value",
-        hover_name="employer_name",
-        size_max=60,
-    )
-    fig.update_yaxes(title="Beneficiary registration")
-    fig.update_xaxes(visible=False, showticklabels=False, showgrid=False, title="")
-    fig.update_layout(
-        showlegend=False, autosize=True, margin={"r": 40, "t": 40, "l": 60, "b": 40}
-    )
+def graphHistory():
+    fig = px.line(df_status_type, x="lottery_year", y="value", color='status_type', log_y=True, text='value', height=400,
+                color_discrete_map={'BENEFICIARY':'rgba(69, 115, 144 ,1)','SELECTED':'rgba(7, 159, 0, 1)', 'NOT SELECTED':'rgba(255, 0, 19, 1)'},
+                template='none')
+    fig.update_traces(textposition="bottom right")
+    fig.update_yaxes(showgrid=True, title='Beneficiary registration')
+    fig.update_xaxes(visible=True, showticklabels=True, title='Year',type="category")
+    fig.update_layout(legend_title="Status")
     return fig
 
+def graphGender():
+    fig = px.bar(df_gender, y="lottery_year", x="value", color="gender", orientation='h', facet_col='status_type',
+                 template='none',facet_col_spacing=0.08,
+                color_discrete_map={'FEMALE':'rgba( 178, 90, 122 ,1)','MALE':'rgba(  65, 78, 115 , 1)'}, height=400)
+    fig.update_layout(margin=dict(l=60, r=60, b=60, t=60))
+    fig.update_xaxes(showgrid=True, title='Beneficiary registration')
+    fig.update_yaxes(visible=True, type="category")
+    fig.for_each_annotation(lambda a: a.update(text=a.text.replace("status_type=NOT SELECTED", "NOT SELECTED")))
+    fig.for_each_annotation(lambda a: a.update(text=a.text.replace("status_type=SELECTED", "SELECTED")))
+    fig.update_traces(width=0.5)
+    fig.update_layout(legend_title="Gender")
+    return fig
 
 def graphMap():
     fig = px.choropleth_mapbox(
@@ -226,11 +227,13 @@ def display_click_data(prev, next):
     active_next = False
     active_prev = False
     plots = [
-        html.Div([dcc.Graph(figure=graphEmployer(), config=config)]),
+        html.Div([dcc.Graph(figure=graphHistory(), config=config)]),
+        html.Div([dcc.Graph(figure=graphGender(), config=config)]),
         html.Div([dcc.Graph(figure=graphMap(), config=config)]),
     ]
     text = [
-        ("Employer", "Beneficiary registration submitted"),
+        ("Beneficiary status type", "Status of the registration in the lottery."),
+        ("Beneficiary Gender", "Gender of beneficiary status of the registration in the lottery."),
         ("Beneficiary", "Beneficiary's country of nationality"),
     ]
 
