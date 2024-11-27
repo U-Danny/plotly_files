@@ -1,13 +1,12 @@
-from dash import Dash, dcc, html
+import dash
+from dash import Input, Output, dcc, html
 import dash_bootstrap_components as dbc
-from dash import html, Input, Output
 import pandas as pd
 from urllib.request import urlopen
-import json
+import numpy as np
 import plotly.express as px
 from wordcloud import WordCloud
-import matplotlib.pyplot as plt
-import numpy as np
+
 
 dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates/dbc.min.css"
 BS = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
@@ -18,7 +17,6 @@ external_stylesheets = [
     dbc.icons.FONT_AWESOME,
     dbc.icons.BOOTSTRAP,
 ]
-
 config = {
     "displaylogo": False,
     "queueLength": 0,
@@ -42,78 +40,219 @@ config = {
     },
 }
 
-df = pd.read_csv('https://raw.githubusercontent.com/plotly/Figure-Friday/refs/heads/main/2024/week-47/scrubbed.csv', low_memory=False)
+df = pd.read_csv('https://raw.githubusercontent.com/plotly/Figure-Friday/refs/heads/main/2024/week-47/scrubbed.csv')
 df['year'] = pd.to_datetime(df['date posted']).dt.year
 df['datetime'] = pd.to_datetime(df['datetime'], format='%m/%d/%Y %H:%M',  errors='coerce')
-df['mount'] = df['datetime'].dt.strftime('%B')
+df['month'] = df['datetime'].dt.strftime('%B')
 df['day'] = df['datetime'].dt.strftime('%A')
 
-def graphHeatmap(year=2014):
-    df_sub = df[df['year'] == year]
-    df_sub = df_sub[['year','mount','day']]
-    df_x = df_sub.groupby(['year','mount','day'])['day'].count().reset_index(name='valor')
-    df_x = df_x.pivot(index='day', columns='mount', values='valor')
-    mounts = ['January', 'February', 'March', 'April', 'May', 'June','July', 'August', 'September', 'October', 'November', 'December']
+df_polarity = pd.read_csv(
+    "https://raw.githubusercontent.com/U-Danny/test-dataset/refs/heads/main/polarity_sub.csv",sep=';'
+)
+df_polarity = df_polarity.sort_values(by=['year'], ascending=True)
+
+df_tf_idf = pd.read_csv("https://raw.githubusercontent.com/U-Danny/test-dataset/refs/heads/main/tf_idf.csv",index_col=0).squeeze()
+
+def graphScatter3d():
+    df_3 = df[['year','month','day']]
+    df_3 = df_3.groupby(['year','month','day'])['day'].count().reset_index(name='valor')
+    months = ['January', 'February', 'March', 'April', 'May', 'June','July', 'August', 'September', 'October', 'November', 'December']
     days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-    fig = px.imshow(df_x, color_continuous_scale='BuGn',x=[m for m in mounts if m in list(df_x.columns)],y=[d for d in days if d in list(df_x.index)],
-                    height=400,template='plotly_dark')
-    fig.update_layout(margin=dict(l=10,r=0,t=60,b=100), title='Sightings on days and months.')
+    fig = px.scatter_3d(df_3, x='month', y='day', z='year', size='valor', size_max=40,template='none',
+                color='valor', color_continuous_scale='ice_r', height=500,)
+    fig.update_scenes(
+        xaxis_categoryarray= months,
+        yaxis_categoryarray= days,    
+    )
+    fig.update_traces(
+        marker=dict(
+            #sizemin=1,
+            line=dict(width=0)
+        )
+    )
+    fig.update_layout(margin=dict(l=0,r=0,t=0,b=0))
     return fig
 
-def graphWord(year=2014):
-    df_x = df[df['year'] == year]
-    text = ''
-    for c in list(df_x['comments']):
-        text += str(c)
-    wordcloud = WordCloud().generate(text)
-    wordcloud = WordCloud(
-        height=300,
-        width=600,
-        background_color='black',
-        colormap='viridis'
-    ).generate(text)
+
+def graphWordCloud():
+    word_freq = df_tf_idf.to_dict()
+    wordcloud = WordCloud(width=800, height=300, background_color='white').generate_from_frequencies(word_freq)
     image_array = np.array(wordcloud.to_array())
-    fig = px.imshow(image_array, template='plotly_dark',height=400)
+    fig = px.imshow(image_array, template='none',height=400)
     fig.update_xaxes(visible=False)
     fig.update_yaxes(visible=False)
-    fig.update_layout(margin=dict(l=40,r=40,t=40,b=40), title='Most common words in the comments.')
+    fig.update_layout(margin=dict(l=0,r=0,t=0,b=0))
     return fig
 
-app = Dash(__name__, external_stylesheets=external_stylesheets)
+def graphPolarity():    
+    fig = px.scatter(df_polarity,x='polaridad', y='subjetividad', color='polaridad', color_continuous_scale='rdbu',
+                    animation_frame='year',
+                    hover_name="datetime", hover_data=["comments", "polaridad"], template='none')
+    return fig
 
-title = html.Div(
-    [html.H5("UFO sightings in north America since the 20th century", className="p-2 text-center")]
+
+# Create the Dash app
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+
+carousel = html.Div(
+    [
+        html.Div(
+            [
+                html.Div(
+                    [
+                        dbc.Button(
+                            html.I(
+                                id="icon-prev",
+                                className="fa-solid fa-circle-arrow-left fa-2xl text-dark",
+                            ),
+                            className="rounded-pill btn-link px-2 col",
+                            outline=True,
+                            id="prev",
+                            n_clicks=0,
+                        ),
+                        dbc.Button(
+                            html.I(
+                                id="icon-next",
+                                className="fa-solid fa-circle-arrow-right fa-3x text-dark",
+                            ),
+                            className="rounded-pill btn-link px-0 col my-0 py-0",
+                            outline=True,
+                            id="next",
+                            n_clicks=0,
+                        ),
+                    ],
+                    className="row py-0 my-0",
+                ),
+            ],
+            className="p-1",
+        ),
+        html.Div(
+            [
+                html.H5(id="title-plot", className="px-2 my-0 py-0 text-dark fw-bold"),
+                html.H6(id="sub-title-plot", className="px-2 my-0 py-0"),
+            ],
+            className="p-1 my-0 py-1",
+        ),
+    ],
+    className="d-flex text-secondary my-0 py-0",
 )
-slider = html.Div([
-    dcc.Slider(min(df['year']),max(df["year"]), 1,
-               value=2014,
-               marks={i: str(i) for i in list(set(df["year"]))},
-               id='id-slider'
-    ),
-], className='px-3 pt-3')
-body = html.Div([
-    html.Div([
-        dcc.Graph(
-                id="id-Heat", figure= graphHeatmap(2014), config=config, clear_on_unhover=True
-            )
-    ],className='col-sm-6 mx-0 px-0'),
-    html.Div([
-        dcc.Graph(
-                id="id-Word", figure= graphWord(2014), config=config, clear_on_unhover=True
-            )
-    ],className='col-sm-6 mx-0 px-0'),
-],className='row pt-5')
 
-app.layout = html.Div([title, slider, body], className="bg-dark text-info vh-100")
+slider_plot = html.Div(
+    [
+        dbc.Progress(
+            value=0,
+            style={"height": "3px"},
+            color="primary",
+            className="mb-1 w-100",
+            id="id-counter",
+        ),
+    ],
+    className="my-0 py-0 w-100",
+)
+
+sub_controls = html.Div(
+    [
+        html.Div(
+            [
+                html.Small(
+                    id="count-plot",
+                    className="text-center mx-4 fw-bold my-0 py-0",
+                    style={"fontSize": "smaller"},
+                ),
+            ],
+            className="py-0 my-0",
+        ),
+    ],
+    className="d-flex py-0 my-0",
+)
+
+plot = html.Div(
+    [
+        dcc.Loading(
+            id="id-plots", color="#018E99", type="cube", style={"padding-top": "120px"}
+        )
+    ],
+    className="my-0 py-0 border-top",
+)
+
+app.layout = dbc.Container(
+    [
+        html.Div(
+            [
+                html.H3("UFO sightings in north America since the 20th century", className="p-2"),
+                html.Span(
+                    "STORY Week 47 FF",
+                    className="ms-auto",
+                    style={"fontSize": "smaller", "color": "gray"},
+                ),
+            ],
+            className="container text-center d-flex",
+        ),
+        html.Div(
+            [slider_plot, carousel, sub_controls, plot], className="bg-light container"
+        ),
+    ],
+    fluid=True,
+    className="bg-light vh-100",
+)
+
 
 @app.callback(
-    [Output("id-Heat", "figure"),
-     Output("id-Word", "figure"),],
-    Input("id-slider", "value"),
-    prevent_initial_call=True,
+    [
+        Output("id-plots", "children"),
+        Output("title-plot", "children"),
+        Output("sub-title-plot", "children"),
+        Output("prev", "disabled"),
+        Output("next", "disabled"),
+        Output("count-plot", "children"),
+        Output("prev", "n_clicks"),
+        Output("next", "n_clicks"),
+        Output("id-counter", "value"),
+    ],
+    [
+        Input("prev", "n_clicks"),
+        Input("next", "n_clicks"),
+    ],
 )
-def displayClick(value):
-    return [graphHeatmap(value),graphWord(value)]
+def display_click_data(prev, next):
+    active_next = False
+    active_prev = False
+    plots = [
+        html.Div([dcc.Graph(figure=graphScatter3d(), config=config)]),
+        html.Div([dcc.Graph(figure=graphWordCloud(), config=config)]),        
+        html.Div([dcc.Graph(figure=graphPolarity(), config=config)]),
+    ]
+    text = [
+        ("Wine production by color", "The color of wine is an essential aspect both from a visual standpoint and in terms of quality and perception."),
+        ("Hectoliters per hectare", "Max allowed yield of hectoliters per hectare (Italy / France)"),
+        ("Hectoliters per hectare", "Max allowed yield of hectoliters per hectare (Italy / France)"),
+    ]
+
+    if next - prev <= 0:
+        active_prev = True
+        prev = 0
+        next = 0
+        index = 0
+    elif next - prev >= (len(text) - 1):
+        active_next = True
+        next = len(text) - 1
+        prev = 0
+        index = len(text) - 1
+    else:
+        index = next - prev
+    counter = (100 / len(text)) * (index + 1)
+    return [
+        plots[index],
+        text[index][0],
+        text[index][1],
+        active_prev,
+        active_next,
+        str(index + 1) + " de " + str(len(text)),
+        prev,
+        next,
+        counter,
+    ]
+
 
 if __name__ == "__main__":
     app.run_server(debug=True)
