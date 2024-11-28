@@ -40,7 +40,7 @@ config = {
     },
 }
 
-df = pd.read_csv('https://raw.githubusercontent.com/plotly/Figure-Friday/refs/heads/main/2024/week-47/scrubbed.csv')
+df = pd.read_csv('https://raw.githubusercontent.com/plotly/Figure-Friday/refs/heads/main/2024/week-47/scrubbed.csv', low_memory=False)
 df['year'] = pd.to_datetime(df['date posted']).dt.year
 df['datetime'] = pd.to_datetime(df['datetime'], format='%m/%d/%Y %H:%M',  errors='coerce')
 df['month'] = df['datetime'].dt.strftime('%B')

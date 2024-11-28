@@ -95,16 +95,16 @@ def graphViolin():
 
 def graphPictorial(country = 'FRANCE'):
     data = {'ITALY':[
-                {'name':'White', 'start':0, 'end': 0.166, 'color':[197, 188, 165]},
-                {'name':'Rosé', 'start':0.166, 'end': 0.188986, 'color':[177, 79, 83]},
-                {'name':'Red', 'start':0.188985, 'end': 0.34, 'color':[150, 31, 33]},
-                {'name':'Over', 'start':0.34, 'end': 1, 'color':[187, 185, 192]},
+                {'value':48.27,'name':'White', 'start':0, 'end': 0.166, 'color':[197, 188, 165]},
+                {'value':7.31,'name':'Rosé', 'start':0.166, 'end': 0.188986, 'color':[177, 79, 83]},
+                {'value':44.42,'name':'Red', 'start':0.188985, 'end': 0.34, 'color':[150, 31, 33]},
+                {'value':0,'name':'Over', 'start':0.34, 'end': 1, 'color':[187, 185, 192]},
             ],
             'FRANCE':[
-                {'name':'White', 'start':0, 'end': 0.160068, 'color':[197, 188, 165]},
-                {'name':'Rosé', 'start':0.160068, 'end': 0.21707, 'color':[177, 79, 83]},
-                {'name':'Red', 'start':0.21707, 'end': 0.34, 'color':[150, 31, 33]},
-                {'name':'Over', 'start':0.34, 'end': 1, 'color':[187, 185, 192]},
+                {'value':47.08,'name':'White', 'start':0, 'end': 0.160068, 'color':[197, 188, 165]},
+                {'value':16.77,'name':'Rosé', 'start':0.160068, 'end': 0.21707, 'color':[177, 79, 83]},
+                {'value':36.16,'name':'Red', 'start':0.21707, 'end': 0.34, 'color':[150, 31, 33]},
+                {'value':0,'name':'Over', 'start':0.34, 'end': 1, 'color':[187, 185, 192]},
             ]
           }
     df = pd.DataFrame(data[country])
@@ -128,7 +128,7 @@ def graphPictorial(country = 'FRANCE'):
 
     for index, row in df.iterrows():
         if row['name'] != 'Over':
-            addAnnotation(fig,matrix.shape,row['start'],row['end'],str(round((row['end']-row['start'])*100,2))+'% '+row['name'])
+            addAnnotation(fig,matrix.shape,row['start'],row['end'],str(row['value'])+'% '+row['name'])
 
     fig.update_xaxes(title = 'Time', showticklabels=False, visible = False)
     fig.update_yaxes(visible=False, type='linear', showticklabels=False)
