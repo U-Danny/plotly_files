@@ -41,10 +41,12 @@ config = {
 }
 
 df = pd.read_csv('https://raw.githubusercontent.com/plotly/Figure-Friday/refs/heads/main/2024/week-47/scrubbed.csv', low_memory=False)
+df = df[['date posted','datetime','city']]
 df['year'] = pd.to_datetime(df['date posted']).dt.year
 df['datetime'] = pd.to_datetime(df['datetime'], format='%m/%d/%Y %H:%M',  errors='coerce')
 df['month'] = df['datetime'].dt.strftime('%B')
 df['day'] = df['datetime'].dt.strftime('%A')
+df['hour'] = df['datetime'].dt.strftime('%H')
 
 df_polarity = pd.read_csv(
     "https://raw.githubusercontent.com/U-Danny/test-dataset/refs/heads/main/polarity_sub.csv",sep=';'
@@ -53,35 +55,35 @@ df_polarity = df_polarity.sort_values(by=['year'], ascending=True)
 
 df_tf_idf = pd.read_csv("https://raw.githubusercontent.com/U-Danny/test-dataset/refs/heads/main/tf_idf.csv",index_col=0).squeeze()
 
-def graphScatter3d():
-    df_3 = df[['year','month','day']]
-    df_3 = df_3.groupby(['year','month','day'])['day'].count().reset_index(name='valor')
-    months = ['January', 'February', 'March', 'April', 'May', 'June','July', 'August', 'September', 'October', 'November', 'December']
-    days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-    fig = px.scatter_3d(df_3, x='month', y='day', z='year', size='valor', size_max=40,template='none',
-                color='valor', color_continuous_scale='ice_r', height=500,)
-    fig.update_scenes(
-        xaxis_categoryarray= months,
-        yaxis_categoryarray= days,    
-    )
-    fig.update_traces(
-        marker=dict(
-            #sizemin=1,
-            line=dict(width=0)
-        )
-    )
-    fig.update_layout(margin=dict(l=0,r=0,t=0,b=0))
+mounts = ['January', 'February', 'March', 'April', 'May', 'June','July', 'August', 'September', 'October', 'November', 'December']
+days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+def graphHeatmapMonth():
+    df_t = df.groupby(['month','day'])['day'].count().reset_index(name='valor')
+    df_t['Z_score'] = (df_t['valor'] - df_t['valor'].mean()) / df_t['valor'].std()
+    df_pivot = df_t.pivot(index='day', columns='month', values='Z_score')    
+    fig = px.imshow(df_pivot, color_continuous_scale='ice_r',
+                    x=[m for m in mounts if m in list(df_pivot.columns)],
+                    y=[d for d in days if d in list(df_pivot.index)],
+                    height=450,template='none')
     return fig
 
+def graphHeatmapDay():
+    df_t = df.groupby(['day','hour'])['hour'].count().reset_index(name='valor')
+    df_t['Z_score'] = (df_t['valor'] - df_t['valor'].mean()) / df_t['valor'].std()
+    df_pivot = df_t.pivot(index='day', columns='hour', values='Z_score')
+    fig = px.imshow(df_pivot, color_continuous_scale='ice_r',height=450,template='none',
+                    y=[m for m in days if m in list(df_pivot.index)])
+    return fig
 
 def graphWordCloud():
     word_freq = df_tf_idf.to_dict()
-    wordcloud = WordCloud(width=800, height=300, background_color='white').generate_from_frequencies(word_freq)
+    wordcloud = WordCloud(width=500, height=300, background_color='white').generate_from_frequencies(word_freq)
     image_array = np.array(wordcloud.to_array())
-    fig = px.imshow(image_array, template='none',height=400)
+    fig = px.imshow(image_array, template='none',height=450)
     fig.update_xaxes(visible=False)
     fig.update_yaxes(visible=False)
-    fig.update_layout(margin=dict(l=0,r=0,t=0,b=0))
+    fig.update_layout(margin=dict(l=0,r=0,t=40,b=40))
     return fig
 
 def graphPolarity():    
@@ -218,14 +220,16 @@ def display_click_data(prev, next):
     active_next = False
     active_prev = False
     plots = [
-        html.Div([dcc.Graph(figure=graphScatter3d(), config=config)]),
+        html.Div([dcc.Graph(figure=graphHeatmapDay(), config=config)]),
+        html.Div([dcc.Graph(figure=graphHeatmapMonth(), config=config)]),
         html.Div([dcc.Graph(figure=graphWordCloud(), config=config)]),        
         html.Div([dcc.Graph(figure=graphPolarity(), config=config)]),
     ]
     text = [
-        ("Wine production by color", "The color of wine is an essential aspect both from a visual standpoint and in terms of quality and perception."),
-        ("Hectoliters per hectare", "Max allowed yield of hectoliters per hectare (Italy / France)"),
-        ("Hectoliters per hectare", "Max allowed yield of hectoliters per hectare (Italy / France)"),
+        ("UFO Sighting Frequencies by Day and Hour", "Analyzing UFO Sighting Patterns Using Z-Score Normalization."),
+        ("UFO Sighting Frequencies by Month and Day", "Evaluating Sighting Patterns Using Z-Score Normalization."),
+        ("Most Frequent Words in UFO Sighting Comments", "Analyzing Comment Content Using TF-IDF for Word Importance"),
+        ("Comment Classification by Subjectivity and Polarity in UFO Sightings", "Analyzing Text Using TextBlob for Sentiment and Subjectivity Scores."),
     ]
 
     if next - prev <= 0:
