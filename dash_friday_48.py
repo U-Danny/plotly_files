@@ -81,7 +81,7 @@ def graphLine(df):
     adjusted_coefficients = reversed_list.copy()
 
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=x, y=y, mode='markers', name='Datos Originales',marker=dict(color='#286a79', size=5)))
+    fig.add_trace(go.Scatter(x=x, y=y, mode='markers', name='Original data',marker=dict(color='#286a79', size=5)))
     target_values = [50, 75, 90, 100]
     target_color = ['red', 'blue', 'green', '#7aff05']
     x_futures = []
@@ -93,7 +93,7 @@ def graphLine(df):
         index = 1
     elif 75.0 <= max(df.iloc[0].tolist()) < 90.0:
         index = 2
-    elif 90.0 <= max(df.iloc[0].tolist()):
+    elif 90.0 <= max(df.iloc[0].tolist()) < 100.0:
         index = 3
     else:
         index = -1
@@ -110,7 +110,7 @@ def graphLine(df):
             fig.add_trace(go.Scatter(x=[x_future[0]], y=[y_future], mode='markers',
                                     name=f'Prediction: {y_future:.2f}% year:{x_future[0]:.0f}', 
                                     marker=dict(color=target_color[index], size=10)))
-        fig.add_trace(go.Scatter(x=x_fit, y=y_fit, mode='lines', name=f'Curva Ajustada (Grado {best_degree})', line=dict(color='#0090b0', width=1)))
+        fig.add_trace(go.Scatter(x=x_fit, y=y_fit, mode='lines', name=f'Prediction line (Grade {best_degree})', line=dict(color='#0090b0', width=1)))
 
     fig.update_layout(legend=dict(x=0.01, y=0.98), template='plotly_white', height=400)
     fig.update_layout(yaxis_range=[0,110],margin={"r":0,"t":20,"l":20,"b":40})
