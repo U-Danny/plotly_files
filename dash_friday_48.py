@@ -59,7 +59,7 @@ def graphMap():
 def graphLine(df):    
     x = np.array(list(map(int, list(df.columns))))
     y = np.array(df.iloc[0].tolist())
-    max_degree = 8
+    max_degree = 3
     best_degree = 1
     best_score = float('-inf')
     for degree in range(1, max_degree + 1):
