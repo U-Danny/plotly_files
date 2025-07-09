@@ -253,7 +253,7 @@ app.layout = html.Div(
                 ),
                 dbc.ModalFooter(
                     dbc.Button(
-                        "Cerrar", id="close-modal", className="ms-auto", n_clicks=0
+                        "Close", id="close-modal", className="ms-auto", n_clicks=0
                     )
                 ),
             ],
