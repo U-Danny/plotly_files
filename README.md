@@ -40,7 +40,7 @@ Click on any image to view it in full size.
   </tr>
 </table>
 
-### Pictorial Stacked Chart
+### Plotly Figure Friday
 
 <table>    
   <tr>
