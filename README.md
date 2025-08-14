@@ -91,6 +91,11 @@ Click on any image to view it in full size.
   <tr>
     <td><img src="Plotly_Figure-Friday/images/ff_22.png" width="100%"></td>
     <td><img src="Plotly_Figure-Friday/images/ff_23.png" width="100%"></td>
+    <td><img src="Plotly_Figure-Friday/images/ff_24.png" width="100%"></td>
+  </tr>
+  <tr>
+    <td><img src="Plotly_Figure-Friday/images/ff_25.png" width="100%"></td>
+    <td><img src="" width="100%"></td>
     <td><img src="" width="100%"></td>        
   </tr>
 </table>
